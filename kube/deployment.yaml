@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-microservice
+  namespace: fwutter
+  labels:
+    app: frontend-microservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend-microservice
+  template:
+    metadata:
+      labels:
+        app: frontend-microservice
+    spec:
+      containers:
+        - image: joeriberman/frontend-microservice
+          imagePullPolicy: IfNotPresent
+          name: frontend-microservice
+          ports: 
+            - containerPort: 80
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
