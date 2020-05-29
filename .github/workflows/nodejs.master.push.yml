@@ -1,0 +1,109 @@
+name: Nodejs push on master branch
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    # The virtual machine that will be used on GitHub
+    runs-on: ubuntu-18.04
+    
+    # Run the steps in a Docker container on the virtual machine
+    container:
+          image: node:12.16.2
+        steps:
+          - uses: actions/checkout@v2
+
+          - name: Decrypt the GPG encrypted config files
+            run: gpg --quiet --batch --yes --passphrase ${{ secrets.GPG_PASSPHRASE }} --output ./src/config.json --decrypt ./src/config.develop.json.gpg
+
+          - name: Install dependencies
+            run: npm ci
+
+          - name: Build
+            run: npm run build --if-present
+            env:
+              CI: false
+          
+          - name: Test
+            run: npm test
+            env:
+              CI: false
+
+          - name: Upload release artifact
+            uses: actions/upload-artifact@v1
+            with:
+              name: release-artifact
+              path: ./build
+         
+          - name: Upload Dockerfile artifact
+            uses: actions/upload-artifact@v1
+            with:
+              name: dockerfile-artifact
+              path: ./Dockerfile
+          
+          - name: Upload Kubernetes artifact
+            uses: actions/upload-artifact@v1
+            with:
+              name: kubernetes-artifact
+              path: ./kube_development
+  
+  deliver:
+    needs: build
+    runs-on: ubuntu-18.04
+    steps:
+      # Download artifacts from GitHub workflow to use in this job
+      - name: Download release artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: release-artifact
+          path: ./release
+
+      - name: Download Dockerfile artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: dockerfile-artifact
+          path: .
+      
+      # Deliver Docker image to DockerHub
+      - name: Deliver Docker image
+        env:
+          CONTAINER_IMAGE: ${{ secrets.DOCKER_USER }}/${{ secrets.REPOSITORY_NAME }}:${{ github.sha }}
+          CONTAINER_IMAGE_LATEST: ${{ secrets.DOCKER_USER }}/${{ secrets.REPOSITORY_NAME }}:develop
+        run: |
+          docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_ACCESS_TOKEN }}
+          docker build -t $CONTAINER_IMAGE -t $CONTAINER_IMAGE_LATEST .
+          docker push $CONTAINER_IMAGE
+          docker push $CONTAINER_IMAGE_LATEST
+          
+  deploy:
+    needs: deliver
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Download Kubernetes artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: kubernetes-artifact
+          path: ./kube_development
+          
+      - name: Setup Kubectl
+        uses: azure/setup-kubectl@v1
+        
+      - name: Set context via kubeconfig
+        uses: azure/k8s-set-context@v1
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+      
+      - name: Deploy Kubernetes with manifests
+        uses: azure/k8s-deploy@v1
+        with:
+            namespace: dwetter-develop
+            manifests: |
+              ./kube_develop/certificate.yaml
+              ./kube_develop/deployment.yaml
+              ./kube_develop/ingress.yaml
+              ./kube_develop/service.yaml
+              ./kube_develop/autoscaler.yaml
+            images:  |
+              ${{ secrets.DOCKER_ORGANIZATION }}/${{ secrets.REPOSITORY_NAME }}:${{ github.sha }}
