@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata: 
+  name: frontend-microservice-ingress
+  namespace: fwutter
+  annotations: 
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt"    
+    nginx.ingress.kubernetes.io/ssl-passthrough: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  rules:
+    - host: joeriberman.nl
+      http:
+        paths:
+          - backend:
+              serviceName: frontend-microservice
+              servicePort: 80
+  tls:
+    - secretName: frontend-microservice-tls
+      hosts: 
+        - joeriberman.nl
+status:
+  loadBalancer:
+    ingress:
+      - ip: 5.189.161.42
