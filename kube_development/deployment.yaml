@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend-microservice
-  namespace: fwutter
+  namespace: development
   labels:
     app: frontend-microservice
 spec:
