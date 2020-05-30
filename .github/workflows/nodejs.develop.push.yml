@@ -71,7 +71,7 @@ jobs:
           CONTAINER_IMAGE: ${{ secrets.DOCKER_USER }}/${{ secrets.REPOSITORY_NAME }}:${{ github.sha }}
           CONTAINER_IMAGE_LATEST: ${{ secrets.DOCKER_USER }}/${{ secrets.REPOSITORY_NAME }}:develop
         run: |
-          docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_ACCESS_TOKEN }}
+          docker login -u ${{ secrets.DOCKER_USER }} --password-stdin ${{ secrets.DOCKER_ACCESS_TOKEN }}
           docker build -t $CONTAINER_IMAGE -t $CONTAINER_IMAGE_LATEST .
           docker push $CONTAINER_IMAGE
           docker push $CONTAINER_IMAGE_LATEST
@@ -106,4 +106,4 @@ jobs:
               ./kube_development/service.yaml
               ./kube_development/autoscaler.yaml
             images:  |
-              ${{ secrets.DOCKER_ORGANIZATION }}/${{ secrets.REPOSITORY_NAME }}:${{ github.sha }}
+              ${{ secrets.DOCKER_USER }}/${{ secrets.REPOSITORY_NAME }}:${{ github.sha }}
