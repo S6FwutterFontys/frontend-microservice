@@ -2,7 +2,7 @@ apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
   name: frontend-microservice
-  namespace: fwutter
+  namespace: development
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
