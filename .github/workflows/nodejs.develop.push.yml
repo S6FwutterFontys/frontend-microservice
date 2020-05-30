@@ -57,7 +57,7 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: release-artifact
-          path: ./release
+          path: ./build
 
       - name: Download Dockerfile artifact
         uses: actions/download-artifact@v1
