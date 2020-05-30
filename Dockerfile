@@ -1,8 +1,8 @@
-# Get the nginx 1.16.0 alpine image from Docker Hub
-FROM nginx:1.16.0-alpine
+# Get the nginx stable alpine image from Docker Hub
+FROM nginx:stable-alpine
 
 # Set the current work directory in the image
-WORKDIR /var/www/
+WORKDIR /usr/share/nginx/html/
 
 # Copy the /build folder into the current work directory
 COPY /build ./
