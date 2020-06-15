@@ -6,13 +6,13 @@ metadata:
   annotations: 
     nginx.ingress.kubernetes.io/rewrite-target: /
     kubernetes.io/ingress.class: "nginx"
-    cert-manager.io/cluster-issuer: "letsencrypt"    
+    cert-manager.io/cluster-issuer: "letsencrypt-develop"    
     nginx.ingress.kubernetes.io/ssl-passthrough: "false"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   rules:
-    - host: joeriberman.nl
+    - host: dev.joeriberman.nl
       http:
         paths:
           - backend:
@@ -21,7 +21,7 @@ spec:
   tls:
     - secretName: frontend-microservice-tls
       hosts: 
-        - joeriberman.nl
+        - dev.joeriberman.nl
 status:
   loadBalancer:
     ingress:
