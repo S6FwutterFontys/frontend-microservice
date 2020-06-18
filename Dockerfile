@@ -1,6 +1,10 @@
 # Get the nginx stable alpine image from Docker Hub
 FROM nginx:stable-alpine
 
+# Copy the nginx config
+RUN rm /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d
+
 # Set the current work directory in the image
 WORKDIR /usr/share/nginx/html/
 
