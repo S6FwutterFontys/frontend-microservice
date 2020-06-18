@@ -3,6 +3,9 @@ on:
   push:
     branches: [develop]
 
+env:
+  WEBSITE_URL: https://dev.joeriberman.nl
+
 jobs:
   build:
     # The virtual machine that will be used on GitHub
@@ -41,6 +44,12 @@ jobs:
         with:
           name: dockerfile-artifact
           path: ./Dockerfile
+
+      - name: Upload NGINX config artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: nginx-artifact
+          path: ./nginx.conf
       
       - name: Upload Kubernetes artifact
         uses: actions/upload-artifact@v1
@@ -116,3 +125,22 @@ jobs:
               ./kube_development/autoscaler.yaml
             images:  |
               ${{ secrets.DOCKER_USER }}/${{ secrets.REPOSITORY_NAME }}:${{ github.sha }}
+
+  lighthouse-check:
+    needs: deploy
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Create /tmp/lighthouse-report directory
+        run: mkdir /tmp/lighthouse-report
+      
+      - name: Run Lighthouse check
+        uses: foo-software/lighthouse-check-action@master
+        with:
+          outputDirectory: /tmp/lighthouse-report
+          urls: ${{ env.WEBSITE_URL }}
+
+      - name: Upload Lighthouse report artifact
+        uses: actions/upload-artifact@master
+        with:
+          name: lighthouse-report-artifact
+          path: /tmp/lighthouse-report
