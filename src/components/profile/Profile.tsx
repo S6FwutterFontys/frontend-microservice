@@ -4,7 +4,7 @@ import User, {initialUserState} from "./Account";
 import config from "../../config.json"
 import {withRouter} from "react-router";
 import {connect} from "react-redux";
-import {Alert, Button, Card, Container, Form, Modal, Row} from "react-bootstrap";
+import {Alert, Button, Card, Col, Container, Form, Modal, Row} from "react-bootstrap";
 import {ChangePasswordModel} from "./ChangePasswordModel";
 import Fweet, {initialFweetState} from "../fweet/Fweet";
 
@@ -216,14 +216,17 @@ const Profile = (props: any) => {
 
         loadUserFweets(id).then(r => {
             let mappedItems = r.map((item : Fweet) => {
-                return <Row className="justify-content-md-center" key={item.fweetId}>
-                    <div className="card" key={item.fweetId} style={{marginTop: '20px'}}>
-                        <div className="card-body">
-                            <p className="card-text">{item.fweetMessage}</p>
-                            <p className="card-text"><small className="text-muted">Written on {new Date(item.timestamp).toLocaleString()}</small></p>
-                        </div>
+                return (
+                    <div>
+                        <Card key={item.fweetId}>
+                            <Card.Body>
+                                <p className="card-text">{item.fweetMessage}</p>
+                                <p className="card-text"><small className="text-muted">Written on {new Date(item.timestamp).toLocaleString()}</small></p>
+                            </Card.Body>
+                        </Card>
+                        <br></br>
                     </div>
-                </Row>
+                )
             })
             setFweetCards(<>{mappedItems} </>)
 
@@ -253,8 +256,6 @@ const Profile = (props: any) => {
             content: "",
             dateTime: ""
         }
-        console.log(data)
-
         return data
     }
 
@@ -411,27 +412,6 @@ const Profile = (props: any) => {
         )
     };
 
-    // let fweetsBlock = () => {
-    //     return (
-    //         {props.fweets.map((postData : any) => {
-    //             return(
-    //                 < div className="card" key={postData.id}>
-    //                     <div className="card-body">
-    //                         <p className="card-text">{postData.content}</p>
-    //                         <p className="card-text"><small className="text-muted">Written on {new Date(postData.dateTime).toLocaleString()}</small></p>
-    //                     </div>
-    //                 </div>
-    //             );
-    //             })}
-    //     );
-    // };
-    //
-    // const setFweetOverwiew = (user: User) => {
-    //     setFweetsOverviewBlock(
-    //         fweetsBlock()
-    //     )
-    // };
-
     /**
      * Changes the display of the render to match the userinformation.
      * @param user which contains the information
@@ -471,23 +451,26 @@ const Profile = (props: any) => {
             <Container>
                 <br></br>
                 <Row className="justify-content-md-center">
-                <Card style={{ width: '32rem' }}>
-                    <Card.Body>
-                        {successUpdate}
-                        {successPasswordUpdate}
-                        {error}
-                        {profileInformationBlock}
-                        {passwordBlock}
-                        {editButton}
-                        {cancelEditButton}
-                        {deleteAccountButton}
-                        <Dialogue show={showModal} deleteAccount={deleteAccount} handleClose={handleClose}
-                                  onHide={() => setShowModal(false)}/>
-                    </Card.Body>
-                </Card>
+                    <Col>
+                        <Card style={{ width: '32rem' }}>
+                            <Card.Body>
+                                {successUpdate}
+                                {successPasswordUpdate}
+                                {error}
+                                {profileInformationBlock}
+                                {passwordBlock}
+                                {editButton}
+                                {cancelEditButton}
+                                {deleteAccountButton}
+                                <Dialogue show={showModal} deleteAccount={deleteAccount} handleClose={handleClose}
+                                          onHide={() => setShowModal(false)}/>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                    <Col>
+                        {fweetCards}
+                    </Col>
                 </Row>
-                <br></br>
-                {fweetCards}
             </Container>
         </div>
     )

@@ -8,7 +8,7 @@ spec:
     server: https://acme-v02.api.letsencrypt.org/directory
     email: joeriberman@hotmail.com
     privateKeySecretRef:
-      name: letsencrypt-develop
+      name: letsencrypt-development
     solvers:
       - http01:
           ingress:
