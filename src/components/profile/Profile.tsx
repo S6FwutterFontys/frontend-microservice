@@ -6,6 +6,7 @@ import {withRouter} from "react-router";
 import {connect} from "react-redux";
 import {Alert, Button, Card, Container, Form, Modal, Row} from "react-bootstrap";
 import {ChangePasswordModel} from "./ChangePasswordModel";
+import Fweet, {initialFweetState} from "../fweet/Fweet";
 
 const GetUserInformation = async (userId: string): Promise<User> => {
     let options: RequestInit = {
@@ -110,10 +111,10 @@ const Dialogue = (props: any) => {
                 <Modal.Title id="contained-modal-title-vcenter">Are you sure you would like to delete your account?</Modal.Title> </Modal.Header>
             <Modal.Body>
                 <Button variant="outline-secondary" onClick={props.handleClose}>
-                    Nee
+                    No
                 </Button>
                 <Button variant="outline-primary" onClick={props.deleteAccount}>
-                    Ja
+                    Yes
                 </Button>
             </Modal.Body>
         </Modal>);
@@ -130,6 +131,7 @@ const Profile = (props: any) => {
     useEffect(() => {
 
         initialize(editMode)
+        handleLoadUserFweets()
         // eslint-disable-next-line
     }, [editMode]);
 
@@ -171,6 +173,8 @@ const Profile = (props: any) => {
     const [deleteAccountButton, setDeleteAccountButton] = React.useState(<div/>);
     const [showModal, setShowModal] = React.useState(false);
 
+    //Fweet Cards
+    const [fweetCards, setFweetCards] = React.useState(<></>);
 
     //const [show, setShow] = React.useState(false);
     const handleClose = () => setShowModal(false);
@@ -181,14 +185,13 @@ const Profile = (props: any) => {
     let newPassword: string = ""; //String which has the newPassword
     let repeatNewPassword: string = ""; //String which has the repeatNewPassword
 
-    let fullName: string = "";
-    let isDelegate: boolean = false; //Boolean of isDelegate
-    let isDAppOwner: boolean = false; //Boolean of isDAppOwner
+    let username: string = "";
 
     /**
      * Method used for loading/reloading the userInformation
      * @param edit which indicates if the profile will be editable or not this boolean also sets the editMode parameter.
      */
+
     async function initialize(edit: boolean) {
         if (id) {
             profileId = id;
@@ -203,9 +206,70 @@ const Profile = (props: any) => {
                     profileUser = await GetUserInformation(id);
                     setInformationDisplay(profileUser, false, edit);
                 }
-                fullName = profileUser.username;
+                username = profileUser.username;
             }
         }
+    }
+
+    function handleLoadUserFweets(){
+        setFweetCards(<div>Loading</div>)
+
+        loadUserFweets(id).then(r => {
+            let mappedItems = r.map((item : Fweet) => {
+                return <Row className="justify-content-md-center" key={item.fweetId}>
+                    <div className="card" key={item.fweetId} style={{marginTop: '20px'}}>
+                        <div className="card-body">
+                            <p className="card-text">{item.fweetMessage}</p>
+                            <p className="card-text"><small className="text-muted">Written on {new Date(item.timestamp).toLocaleString()}</small></p>
+                        </div>
+                    </div>
+                </Row>
+            })
+            setFweetCards(<>{mappedItems} </>)
+
+            //mapJsonToTSX(r.data);
+
+        }).catch((error) =>{
+            setError(error.message)
+        })
+    }
+
+    const loadUserFweets = async (userId: string) => {
+        let options: RequestInit = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            // mode: "cors",
+            // cache: "default"
+        };
+        let response: Response = await fetch(config["SERVICES"]["FWEET_SERVICE_URL"] + "/User/" + userId, options);
+        let data = await response.json();
+        if (response.status !== 200)
+            throw new Error(JSON.stringify(response));
+
+        let item = {
+            id: "",
+            content: "",
+            dateTime: ""
+        }
+        console.log(data)
+
+        return data
+    }
+
+    const mapJsonToTSX = (json: Fweet[]) =>{
+        let mappedItems = json.map((item, key) => {
+            return <div key={item.fweetId}>
+                <div className="card" key={item.fweetId} style={{marginTop: '20px'}}>
+                    <div className="card-body">
+                        <p className="card-text">{item.fweetMessage}</p>
+                        <p className="card-text"><small className="text-muted">Written on {new Date(item.timestamp).toLocaleString()}</small></p>
+                    </div>
+                </div>
+            </div>
+        })
+        setFweetCards(<>{mappedItems} </>)
     }
 
     /**
@@ -219,7 +283,7 @@ const Profile = (props: any) => {
             } else {
                 //ignore
             }
-            profileUser.username = fullName;
+            profileUser.username = username;
             if (await UpdateUserInformation(profileUser, props.auth.User.token)) {
                 setSuccessUpdate(<Alert variant={"success"} onClick={() => setSuccessUpdate(<div/>)}>Account information
                     successfully updated.</Alert>)
@@ -344,13 +408,34 @@ const Profile = (props: any) => {
                     </Form.Group>
                 </form>
             </div>
-
         )
     };
+
+    // let fweetsBlock = () => {
+    //     return (
+    //         {props.fweets.map((postData : any) => {
+    //             return(
+    //                 < div className="card" key={postData.id}>
+    //                     <div className="card-body">
+    //                         <p className="card-text">{postData.content}</p>
+    //                         <p className="card-text"><small className="text-muted">Written on {new Date(postData.dateTime).toLocaleString()}</small></p>
+    //                     </div>
+    //                 </div>
+    //             );
+    //             })}
+    //     );
+    // };
+    //
+    // const setFweetOverwiew = (user: User) => {
+    //     setFweetsOverviewBlock(
+    //         fweetsBlock()
+    //     )
+    // };
 
     /**
      * Changes the display of the render to match the userinformation.
      * @param user which contains the information
+     * @param edit boolean that checks if edit mode is on or not.
      * @param loggedIn indicates if the information display should contain an edit button.
      */
     const setInformationDisplay = (user: User, loggedIn: boolean, edit: boolean) => {
@@ -399,8 +484,10 @@ const Profile = (props: any) => {
                         <Dialogue show={showModal} deleteAccount={deleteAccount} handleClose={handleClose}
                                   onHide={() => setShowModal(false)}/>
                     </Card.Body>
-                    </Card>
+                </Card>
                 </Row>
+                <br></br>
+                {fweetCards}
             </Container>
         </div>
     )
@@ -412,7 +499,8 @@ const Profile = (props: any) => {
  */
 const mapStateToProps = (state: any) => {
     return {
-        auth: state.auth
+        auth: state.auth,
+        fweets: []
     };
 };
 

@@ -1,5 +1,6 @@
 {
   "SERVICES":{
-    "ACCOUNT_SERVICE_URL": "http://localhost:5000/Account"
+    "ACCOUNT_SERVICE_URL": "https://account.dev.joeriberman.nl/Account",
+    "FWEET_SERVICE_URL": "https://fweet.dev.joeriberman.nl/Fweet"
   }
 }
